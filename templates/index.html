@@ -1,0 +1,246 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+
+  <!-- Internal CSS -->
+  <style>
+    :root {
+        --white: #ffffff;
+        --off-white: #e5e5e5;
+        --transp-white-1: rgba(255, 255, 255, 0.25);
+        --transp-white-2: rgba(255, 255, 255, 0.18);
+        --blue-1: #62b8f5;
+        --blue-2: #4475ef;
+        --shadow: rgba(3, 46, 87, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+    body {
+      background-image: url('https://images.pexels.com/photos/3008509/pexels-photo-3008509.jpeg?auto=compress&cs=tinysrgb&w=1600');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      min-height: 100vh;
+    }
+    h1 {
+        text-align: center;
+        color: rgb(5,41,51);
+        margin-bottom: 15px;
+    }
+    form {
+      display: grid;
+      grid-template-columns: 72% 25%;
+      grid-gap: 3%;
+      margin-bottom: 20px;
+    }
+    .container {
+      width: 50%;
+      background: var(--transp-white-2);
+      backdrop-filter: blur(10px);
+      margin: 5rem auto;
+      padding: 2rem;
+      border: 2px solid var(--transp-white-2);
+      border-radius: 10px;
+      color: rgb(5,41,51);
+      min-height: 600px;
+    }
+    input, .btn, ::placeholder {
+      background-color: transparent;
+      padding: .5rem;
+      border-radius: 10px;
+      outline: none;
+      border: 1px solid white;
+    }
+    .btn {
+      padding: .5rem 1rem;
+      border: 2px solid #04009A;
+      cursor: pointer;
+      transition: .3s;
+      color: var(--blue-2);
+      background-color: transparent;
+      border-radius: 0.3em;
+    }
+    .btn:hover {
+      transform: translateY(-3px);
+      background-color: rgb(5,41,51);
+      color: #fff;
+    }
+    .weather {
+      margin-top: 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 200px;
+    }
+    .left, .right {
+      width: 100%;
+      padding: .3rem;
+      border-radius: 10px;
+      background: var(--transp-white-2);
+      backdrop-filter: blur(10px);
+      height: 220px;
+    }
+    .left {
+      margin-right: .5rem;
+      text-transform: uppercase;
+      line-height: 3;
+    }
+    .temp {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 2rem;
+    }
+    .city {
+      margin-top: -22px;
+      text-align: center;
+    }
+    .icon img {
+      width: 100px;
+    }
+    .condition {
+      font-size: 20px;
+      line-height: 2.5;
+    }
+    @media (max-width: 1000px) {
+      .container {
+        width: 80%;
+      }
+    }
+    @media (max-width: 700px) {
+      .weather {
+        flex-direction: column;
+        height: auto;
+      }
+      .container {
+        width: 90%;
+        text-align: center;
+      }
+      form {
+        grid-template-columns: 100%;
+      }
+    }
+    button {
+  background-color: #4CAF50; /* green */
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin-top: 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition-duration: 0.4s;
+}
+
+button:hover {
+  background-color: #45a049; /* darker green on hover */
+}
+</style>
+</head>
+
+<body 
+{% if exception_occurred %}
+  style="background-image: url('https://images.pexels.com/photos/3008509/pexels-photo-3008509.jpeg?auto=compress&cs=tinysrgb&w=1600');"
+{% elif image_url %}
+  style="background-image: url('{{ image_url }}');"
+{% endif %}
+>
+  <div class="container">
+    <h1>Weather App</h1>
+
+    <!-- Form for search by city -->
+    <form method="POST">
+      {% csrf_token %}
+      <input type="text" name="city" placeholder="Enter City" required>
+      <button type="submit" class="btn">Search</button>
+    </form>
+
+    <!-- Button for Get My Temperature -->
+    <div class="location-btn">
+      <form id="locationForm" method="post">
+        {% csrf_token %}
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+        <button type="button" onclick="getLocation()">Get My Temperature</button>
+      </form>
+    </div>
+
+    <!-- Weather result -->
+    {% if temp %}
+    <div class="weather">
+      <div class="left">
+        <h2 class="temp">{{ temp }}&#176;C</h2>
+        <h2 class="city">{{ city }}</h2>
+      </div>
+      <div class="right">
+        <div class="icon">
+          <img src="http://openweathermap.org/img/w/{{ icon }}.png" alt="Weather Icon">
+        </div>
+        <div class="condition">
+          <p>{{ description }}</p>
+          <p>{{ day }}</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if exception_occurred %}
+  <script>
+    window.onload = function() {
+      alert("City information is not available in the Weather API");
+    }
+  </script>
+  {% endif %}
+
+  <!-- JavaScript for geolocation -->
+  <script>
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+
+    function showPosition(position) {
+      document.getElementById("latitude").value = position.coords.latitude;
+      document.getElementById("longitude").value = position.coords.longitude;
+      document.getElementById("locationForm").submit();
+    }
+
+    function showError(error) {
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          alert("User denied the request for Geolocation.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          alert("Location information is unavailable.");
+          break;
+        case error.TIMEOUT:
+          alert("The request to get user location timed out.");
+          break;
+        case error.UNKNOWN_ERROR:
+          alert("An unknown error occurred.");
+          break;
+      }
+    }
+  </script>
+
+</body>
+</html>
