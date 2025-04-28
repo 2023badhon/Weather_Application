@@ -2,6 +2,10 @@ from django.conf import settings
 from django.views.generic import TemplateView
 import requests
 from django.shortcuts import render
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def weather_view(request):
     weather_data = {}
@@ -14,7 +18,7 @@ def weather_view(request):
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
 
-        api_key = 'd3e3dd623ec257822b9f81698aee2677'  # Replace with your OpenWeatherMap API key
+        api_key = os.getenv("WEATHER_API_KEY")  # Replace with your OpenWeatherMap API key
 
         # If city is provided
         if city:
